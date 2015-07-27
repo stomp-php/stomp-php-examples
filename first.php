@@ -1,8 +1,5 @@
 <?php
-require __DIR__.'/../src/FuseSource/Stomp/Stomp.php';
-require __DIR__.'/../src/FuseSource/Stomp/ExceptionInterface.php';
-require __DIR__.'/../src/FuseSource/Stomp/Exception/StompException.php';
-require __DIR__.'/../src/FuseSource/Stomp/Frame.php';
+require __DIR__.'/../vendor/autoload.php';
 /**
  *
  * Copyright (C) 2009 Progress Software, Inc. All rights reserved.
