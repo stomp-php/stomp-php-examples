@@ -1,0 +1,15 @@
+{
+    "name": "stomp-php/stomp-php-examples",
+    "description": "Examples for stomop-php usage.",
+    "type": "project",
+    "require": {
+        "stomp-php/stomp-php": "^3.0"
+    },
+    "license": "Apache-2.0",
+    "authors": [
+        {
+            "name": "Jens Radtke",
+            "email": "swefl@fin-sn.de"
+        }
+    ]
+}

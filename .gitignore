@@ -1,0 +1,4 @@
+/vendor
+/stomp-php-examples.iml
+/composer.lock
+/.idea
