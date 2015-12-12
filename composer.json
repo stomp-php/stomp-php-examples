@@ -1,6 +1,6 @@
 {
     "name": "stomp-php/stomp-php-examples",
-    "description": "Examples for stomop-php usage.",
+    "description": "Examples for stomp-php usage.",
     "type": "project",
     "require": {
         "stomp-php/stomp-php": "^3.0"
