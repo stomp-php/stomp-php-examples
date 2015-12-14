@@ -18,33 +18,31 @@ require __DIR__ . '/../vendor/autoload.php';
  * limitations under the License.
  */
 
-// include a library
-use Stomp\Stomp;
-use Stomp\Message\Bytes;
+use Stomp\Client;
+use Stomp\SimpleStomp;
+use Stomp\Transport\Bytes;
 
 // make a connection
-$con = new Stomp('tcp://localhost:61613');
-// connect
-$con->connect();
+$stomp = new SimpleStomp(new Client('tcp://localhost:61613'));
+
 // send a message to the queue
 $body = 'test';
 $bytesMessage = new Bytes($body);
-$con->send('/queue/test', $bytesMessage);
+$stomp->send('/queue/test', $bytesMessage);
 echo 'Sending message: ';
 print_r($body . "\n");
 
-$con->subscribe('/queue/test');
-$msg = $con->readFrame();
+$stomp->subscribe('/queue/test', 'binary-sub-test', 'client-individual');
+$msg = $stomp->read();
 
 // extract
 if ($msg != null) {
     echo 'Received message: ';
     print_r($msg->body . "\n");
     // mark the message as received in the queue
-    $con->ack($msg);
+    $stomp->ack($msg);
 } else {
     echo "Failed to receive a message\n";
 }
 
-// disconnect
-$con->disconnect();
+$stomp->unsubscribe('/queue/test', 'binary-sub-test');

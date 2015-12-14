@@ -24,26 +24,28 @@ require __DIR__ . '/../vendor/autoload.php';
  Then you can execute this example with:
  $ php security.php
 */
-// include a library
-use Stomp\Stomp;
+
+use Stomp\Client;
 use Stomp\Exception\StompException;
+use Stomp\Stomp;
 
 // make a connection
-$con = new Stomp('tcp://localhost:61613');
-// use sync operations
-$con->sync = true;
+$con = new Client('tcp://localhost:61613');
+$con->setLogin('dejan', 'test');
+
 // connect
 try {
-    $con->connect('dejan', 'test');
+    $con->connect();
 } catch (StompException $e) {
     echo "dejan cannot connect\n";
     echo $e->getMessage() . "\n";
 }
 
-$con->connect('guest', 'password');
+$con->setLogin('guest', 'password');
 
 // send a message to the queue
 try {
+    $con->connect();
     $con->send('/queue/test', 'test');
     echo "Guest sent message with body 'test'\n";
 } catch (StompException $e) {
@@ -54,7 +56,8 @@ try {
 $con->disconnect();
 
 
-$con->connect('system', 'manager');
+$con->setLogin('system', 'manager');
+$con->connect();
 
 // send a message to the queue
 $con->send('/queue/test', 'test');

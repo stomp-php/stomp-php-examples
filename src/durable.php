@@ -20,21 +20,20 @@ require __DIR__ . '/../vendor/autoload.php';
 
 // include a library
 
-use Stomp\Stomp;
+use Stomp\Broker\ActiveMq\Mode\DurableSubscription;
+use Stomp\Client;
 
 // create a producer
-$producer = new Stomp('tcp://localhost:61613');
+$producer = new Client('tcp://localhost:61613');
 // create a consumer
-$consumer = new Stomp('tcp://localhost:61613');
+$consumer = new Client('tcp://localhost:61613');
 $consumer->getConnection()->setReadTimeout(1);
 // set clientId on a consumer to make it durable
-$consumer->clientId = 'test';
-// connect
-$producer->connect();
-$consumer->connect();
+$consumer->setClientId('test');
 
 // subscribe to the topic
-$consumer->subscribe('/topic/test', null, true, true);
+$durableConsumer = new DurableSubscription($consumer, '/topic/test', null, 'client');
+$durableConsumer->activate();
 
 
 // send a message to the topic
@@ -42,12 +41,12 @@ $producer->send('/topic/test', 'test-1');
 echo "Message 'test-1' sent to topic\n";
 
 // receive a message from the topic
-$msg = $consumer->readFrame();
+$msg = $durableConsumer->read();
 
 // do what you want with the message
 if ($msg != null) {
     echo "Message '$msg->body' received from topic\n";
-    $consumer->ack($msg);
+    $durableConsumer->ack($msg);
 } else {
     echo "Failed to receive a message\n";
 }
@@ -55,7 +54,7 @@ if ($msg != null) {
 
 
 // disconnect durable consumer
-$consumer->unsubscribe('/topic/test');
+$durableConsumer->inactive();
 $consumer->disconnect();
 echo "Disconnecting consumer\n";
 
@@ -65,32 +64,22 @@ echo "Message 'test-2' sent to topic\n";
 
 
 // reconnect the durable consumer
-$consumer = new Stomp('tcp://localhost:61613');
-$consumer->clientId = 'test';
-$consumer->connect('admin', 'password');
-$consumer->subscribe('/topic/test', null, true, true);
+$durableConsumer->activate();
 echo "Reconnecting consumer\n";
 
 // receive a message from the topic
-$msg = $consumer->readFrame();
+$msg = $durableConsumer->read();
 
 // do what you want with the message
 if ($msg != null) {
     echo "Message '$msg->body' received from topic\n";
-    $consumer->ack($msg);
+    $durableConsumer->ack($msg);
 } else {
     echo "Failed to receive a message\n";
 }
 
 // disconnect
-if ($consumer->getProtocol() instanceof \Stomp\Protocol\ActiveMq) {
-    // activeMq Way
-    $consumer->unsubscribe('/topic/test');
-    $consumer->unsubscribe('/topic/test', null, true, true);
-} else {
-    // default (apollo way)
-    $consumer->unsubscribe('/topic/test', null, true, true);
-}
+$durableConsumer->deactivate();
 
 // this message will never be seen, since no durable subscriber is present
 $producer->send('/topic/test', 'test-3');

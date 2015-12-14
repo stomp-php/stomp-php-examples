@@ -18,31 +18,30 @@ require __DIR__ . '/../vendor/autoload.php';
  * limitations under the License.
  */
 
-
-// include a library
-
-use Stomp\Stomp;
+use Stomp\Client;
+use Stomp\StatefulStomp;
+use Stomp\Transport\Message;
 
 // make a connection
-$con = new Stomp('failover://(tcp://localhost:61614,ssl://localhost:61612,tcp://localhost:61613)?randomize=false');
-// connect
-$con->connect();
+$stomp = new StatefulStomp(
+    new Client('failover://(tcp://localhost:61614,ssl://localhost:61612,tcp://localhost:61613)?randomize=false')
+);
+
 // send a message to the queue
-$con->send('/queue/test', 'test');
+$stomp->send('/queue/test', new Message('test'));
 echo "Sent message with body 'test'\n";
 // subscribe to the queue
-$con->subscribe('/queue/test');
+$stomp->subscribe('/queue/test', null, 'client-individual');
 // receive a message from the queue
-$msg = $con->readFrame();
+$msg = $stomp->read();
 
 // do what you want with the message
 if ($msg != null) {
     echo "Received message with body '$msg->body'\n";
     // mark the message as received in the queue
-    $con->ack($msg);
+    $stomp->ack($msg);
 } else {
     echo "Failed to receive a message\n";
 }
 
-// disconnect
-$con->disconnect();
+$stomp->unsubscribe();

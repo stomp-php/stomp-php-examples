@@ -18,64 +18,65 @@ require __DIR__ . '/../vendor/autoload.php';
  * limitations under the License.
  */
 
-// include a library
-use Stomp\Stomp;
+use Stomp\Client;
+use Stomp\Network\Connection;
+use Stomp\StatefulStomp;
+use Stomp\Transport\Message;
 
 // make a connection
-$con = new Stomp('tcp://localhost:61613');
-// connect
-$con->connect();
-$con->getConnection()->setReadTimeout(1);
+$connection = new Connection('tcp://localhost:61613');
+$connection->setReadTimeout(1);
+$stomp = new StatefulStomp(new Client($connection));
 
 // subscribe to the queue
-$con->subscribe('/queue/transactions', array('ack' => 'client', 'activemq.prefetchSize' => 1));
+$stomp->subscribe('/queue/transactions', null, 'client');
 
 // try to send some messages
-$con->begin('tx1');
+$stomp->begin();
 for ($i = 1; $i < 3; $i++) {
-    $con->send('/queue/transactions', $i, array('transaction' => 'tx1'));
+    $stomp->send('/queue/transactions', new Message($i));
 }
 // if we abort transaction, messages will not be sent
-$con->abort('tx1');
+$stomp->abort();
 
 // now send some messages for real
-$con->begin('tx2');
+$stomp->begin();
 echo "Sent messages {\n";
 for ($i = 1; $i < 5; $i++) {
     echo "\t$i\n";
-    $con->send('/queue/transactions', $i, array('transaction' => 'tx2'));
+    $stomp->send('/queue/transactions', new Message($i));
 }
 echo "}\n";
 // they will be available for consumers after commit
-$con->commit('tx2');
+$stomp->commit();
 
 // try to receive some messages
-$con->begin('tx3');
+$stomp->begin();
 $messages = array();
 for ($i = 1; $i < 3; $i++) {
-    $msg = $con->readFrame();
+    $msg = $stomp->read();
     array_push($messages, $msg);
-    $con->ack($msg, 'tx3');
+    $stomp->ack($msg);
 }
 // of we abort transaction, we will "rollback" out acks
-$con->abort('tx3');
+$stomp->abort();
 
-$con->begin('tx4');
+$stomp->begin();
 // so we need to ack received messages again
 // before we can receive more (prefetch = 1)
 if (count($messages) != 0) {
     foreach ($messages as $msg) {
-        $con->ack($msg, 'tx4');
+        $stomp->ack($msg);
     }
 }
 // now receive more messages
 for ($i = 1; $i < 3; $i++) {
-    $msg = $con->readFrame();
-    $con->ack($msg, 'tx4');
+    $msg = $stomp->read();
+    $stomp->ack($msg);
     array_push($messages, $msg);
 }
 // commit all acks
-$con->commit('tx4');
+$stomp->commit();
 
 
 echo "Processed messages {\n";
@@ -85,13 +86,10 @@ foreach ($messages as $msg) {
 echo "}\n";
 
 //ensure there are no more messages in the queue
-$frame = $con->readFrame();
+$frame = $stomp->read();
 
 if ($frame === false) {
     echo "No more messages in the queue\n";
 } else {
     echo "Warning: some messages still in the queue: $frame\n";
 }
-
-// disconnect
-$con->disconnect();

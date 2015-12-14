@@ -2,14 +2,8 @@
     "name": "stomp-php/stomp-php-examples",
     "description": "Examples for stomp-php usage.",
     "type": "project",
-    "repositories": [
-        {
-            "type": "vcs",
-            "url": "https://github.com/fin-sn-de/stomp-php"
-        }
-    ],
     "require": {
-        "stomp-php/stomp-php": "dev-feature/version-4"
+        "stomp-php/stomp-php": "4.*"
     },
     "license": "Apache-2.0",
     "authors": [

@@ -18,36 +18,35 @@ require __DIR__ . '/../vendor/autoload.php';
  * limitations under the License.
  */
 
-// include a library
-use Stomp\Stomp;
-use Stomp\Message\Map;
+use Stomp\Client;
+use Stomp\SimpleStomp;
+use Stomp\Transport\Map;
+
 
 // make a connection
-$con = new Stomp('tcp://localhost:61613');
-// connect
-$con->connect();
+$client = new Client('tcp://localhost:61613');
+$stomp = new SimpleStomp($client);
+
+
 // send a message to the queue
 $body = array('city' => 'Belgrade', 'name' => 'Dejan');
 $header = array();
 $header['transformation'] = 'jms-map-json';
 $mapMessage = new Map($body, $header);
-$con->send('/queue/test', $mapMessage);
+$client->send('/queue/test', $mapMessage);
 echo 'Sending array: ';
 print_r($body);
 
-$con->subscribe('/queue/test', array('transformation' => 'jms-map-json'));
+$stomp->subscribe('/queue/test', 'transform-test', 'client', null, ['transformation' => 'jms-map-json']);
 /** @var Map $msg */
-$msg = $con->readFrame();
+$msg = $stomp->read();
 
 // extract
 if ($msg != null) {
     echo 'Received array: ';
     print_r($msg->map);
     // mark the message as received in the queue
-    $con->ack($msg);
+    $stomp->ack($msg);
 } else {
     echo "Failed to receive a message\n";
 }
-
-// disconnect
-$con->disconnect();
