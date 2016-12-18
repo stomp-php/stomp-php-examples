@@ -3,7 +3,7 @@
     "description": "Examples for stomp-php usage.",
     "type": "project",
     "require": {
-        "stomp-php/stomp-php": "4.*"
+        "stomp-php/stomp-php": ">= 4.2"
     },
     "license": "Apache-2.0",
     "authors": [
