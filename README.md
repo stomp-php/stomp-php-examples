@@ -5,7 +5,7 @@ This project contains examples how to work with the [stomp-php client](https://g
 ## Running Examples
 
 Examples are located in `src/` folder. Before running them, be sure
-you have installed this library properly (`composer update`) and you have started ActiveMQ broker
+you have installed this library properly (`composer install`) and you have started ActiveMQ broker
 (recommended version 5.5.0 or above) with [Stomp connector enabled]
 (http://activemq.apache.org/stomp.html).
 
